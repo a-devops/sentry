@@ -106,19 +106,18 @@ class GroupSubscriptionManager(BaseManager):
 
         result = defaultdict(dict)
         for user in all_possible_users:
-            subscription = subscriptions_by_user_id[user.id]
+            subscription_option = subscriptions_by_user_id.get(user.id)
             providers = where_should_be_participating(
                 user,
-                subscription,
+                subscription_option,
                 notification_settings_by_user,
             )
             for provider in providers:
-                reason = getattr(
-                    subscription,
-                    "reason",
-                    GroupSubscriptionReason.implicit,
+                result[provider][user] = (
+                    subscription_option
+                    and subscription_option.reason
+                    or GroupSubscriptionReason.implicit
                 )
-                result[provider][user] = reason
 
         return result
 
