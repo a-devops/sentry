@@ -1,3 +1,4 @@
+import {act} from 'react-dom/test-utils';
 import {browserHistory} from 'react-router';
 
 import {mountWithTheme} from 'sentry-test/enzyme';
@@ -123,48 +124,50 @@ describe('groupEventDetails', () => {
     browserHistory.replace.mockClear();
   });
 
-  it('redirects on switching to an invalid environment selection for event', async function () {
-    const wrapper = mountWithTheme(
-      <GroupEventDetails
-        api={new MockApiClient()}
-        group={group}
-        event={event}
-        project={project}
-        organization={org}
-        environments={[{id: '1', name: 'dev', displayName: 'Dev'}]}
-        params={{orgId: org.slug, groupId: group.id, eventId: '1'}}
-        location={{}}
-      />,
-      routerContext
-    );
-    await tick();
-    expect(browserHistory.replace).not.toHaveBeenCalled();
-    wrapper.setProps({environments: [{id: '1', name: 'prod', displayName: 'Prod'}]});
-    await tick();
-
-    expect(browserHistory.replace).toHaveBeenCalled();
+  it.only('redirects on switching to an invalid environment selection for event', async function () {
+    await act(async () => {
+      const wrapper = mountWithTheme(
+        <GroupEventDetails
+          api={new MockApiClient()}
+          group={group}
+          event={event}
+          project={project}
+          organization={org}
+          environments={[{id: '1', name: 'dev', displayName: 'Dev'}]}
+          params={{orgId: org.slug, groupId: group.id, eventId: '1'}}
+          location={{}}
+        />,
+        routerContext
+      );
+      await tick();
+      expect(browserHistory.replace).not.toHaveBeenCalled();
+      wrapper.setProps({environments: [{id: '1', name: 'prod', displayName: 'Prod'}]});
+      await tick();
+      expect(browserHistory.replace).toHaveBeenCalled();
+    });
   });
 
   it('does not redirect when switching to a valid environment selection for event', async function () {
-    const wrapper = mountWithTheme(
-      <GroupEventDetails
-        api={new MockApiClient()}
-        group={group}
-        event={event}
-        project={project}
-        organization={org}
-        environments={[{id: '1', name: 'dev', displayName: 'Dev'}]}
-        params={{orgId: org.slug, group: group.id, eventId: '1'}}
-        location={{}}
-      />,
-      routerContext
-    );
-    await tick();
-    expect(browserHistory.replace).not.toHaveBeenCalled();
-    wrapper.setProps({environments: []});
-    await tick();
-
-    expect(browserHistory.replace).not.toHaveBeenCalled();
+    await act(async () => {
+      const wrapper = mountWithTheme(
+        <GroupEventDetails
+          api={new MockApiClient()}
+          group={group}
+          event={event}
+          project={project}
+          organization={org}
+          environments={[{id: '1', name: 'dev', displayName: 'Dev'}]}
+          params={{orgId: org.slug, groupId: group.id, eventId: '1'}}
+          location={{}}
+        />,
+        routerContext
+      );
+      await tick();
+      expect(browserHistory.replace).not.toHaveBeenCalled();
+      wrapper.setProps({environments: [{id: '1', name: 'prod', displayName: 'Prod'}]});
+      await tick();
+      expect(browserHistory.replace).not.toHaveBeenCalled();
+    });
   });
 
   it('next/prev links', async function () {
@@ -183,62 +186,66 @@ describe('groupEventDetails', () => {
       body: event,
     });
 
-    const wrapper = mountWithTheme(
-      <GroupEventDetails
-        api={new MockApiClient()}
-        group={group}
-        event={event}
-        project={project}
-        organization={org}
-        environments={[{id: '1', name: 'dev', displayName: 'Dev'}]}
-        params={{orgId: org.slug, groupId: group.id, eventId: '1'}}
-        location={{query: {environment: 'dev'}}}
-      />,
-      routerContext
-    );
-    await tick();
+    await act(async () => {
+      const wrapper = mountWithTheme(
+        <GroupEventDetails
+          api={new MockApiClient()}
+          group={group}
+          event={event}
+          project={project}
+          organization={org}
+          environments={[{id: '1', name: 'dev', displayName: 'Dev'}]}
+          params={{orgId: org.slug, groupId: group.id, eventId: '1'}}
+          location={{}}
+        />,
+        routerContext
+      );
+      await tick();
+      expect(browserHistory.replace).not.toHaveBeenCalled();
+      wrapper.setProps({environments: [{id: '1', name: 'prod', displayName: 'Prod'}]});
+      await tick();
+      const buttons = wrapper.find('GroupEventToolbar').find('ButtonBar').find('Button');
 
-    wrapper.update();
+      expect(buttons.at(0).prop('to')).toEqual({
+        pathname: '/organizations/org-slug/issues/1/events/oldest/',
+        query: {environment: 'dev'},
+      });
 
-    const buttons = wrapper.find('GroupEventToolbar').find('ButtonBar').find('Button');
-
-    expect(buttons.at(0).prop('to')).toEqual({
-      pathname: '/organizations/org-slug/issues/1/events/oldest/',
-      query: {environment: 'dev'},
-    });
-
-    expect(buttons.at(1).prop('to')).toEqual({
-      pathname: '/organizations/org-slug/issues/1/events/prev-event-id/',
-      query: {environment: 'dev'},
-    });
-    expect(buttons.at(2).prop('to')).toEqual({
-      pathname: '/organizations/org-slug/issues/1/events/next-event-id/',
-      query: {environment: 'dev'},
-    });
-    expect(buttons.at(3).prop('to')).toEqual({
-      pathname: '/organizations/org-slug/issues/1/events/latest/',
-      query: {environment: 'dev'},
+      expect(buttons.at(1).prop('to')).toEqual({
+        pathname: '/organizations/org-slug/issues/1/events/prev-event-id/',
+        query: {environment: 'dev'},
+      });
+      expect(buttons.at(2).prop('to')).toEqual({
+        pathname: '/organizations/org-slug/issues/1/events/next-event-id/',
+        query: {environment: 'dev'},
+      });
+      expect(buttons.at(3).prop('to')).toEqual({
+        pathname: '/organizations/org-slug/issues/1/events/latest/',
+        query: {environment: 'dev'},
+      });
     });
   });
 
   it('displays error on event error', async function () {
-    const wrapper = mountWithTheme(
-      <GroupEventDetails
-        api={new MockApiClient()}
-        group={group}
-        event={undefined}
-        eventError
-        project={project}
-        organization={org}
-        environments={[{id: '1', name: 'dev', displayName: 'Dev'}]}
-        params={{orgId: org.slug, group: group.id, eventId: '1'}}
-        location={{}}
-      />,
-      routerContext
-    );
-    await tick();
+    await act(async () => {
+      const wrapper = mountWithTheme(
+        <GroupEventDetails
+          api={new MockApiClient()}
+          group={group}
+          event={undefined}
+          eventError
+          project={project}
+          organization={org}
+          environments={[{id: '1', name: 'dev', displayName: 'Dev'}]}
+          params={{orgId: org.slug, group: group.id, eventId: '1'}}
+          location={{}}
+        />,
+        routerContext
+      );
+      await tick();
 
-    expect(wrapper.text()).toContain('events for this issue could not be found');
+      expect(wrapper.text()).toContain('events for this issue could not be found');
+    });
   });
 
   describe('EventCauseEmpty', () => {
@@ -255,24 +262,26 @@ describe('groupEventDetails', () => {
         ],
       });
 
-      const wrapper = mountWithTheme(
-        <GroupEventDetails
-          api={new MockApiClient()}
-          group={group}
-          event={event}
-          project={proj}
-          organization={org}
-          environments={[{id: '1', name: 'dev', displayName: 'Dev'}]}
-          params={{orgId: org.slug, groupId: group.id, eventId: '1'}}
-          location={{query: {environment: 'dev'}}}
-        />,
-        routerContext
-      );
-      await tick();
-      wrapper.update();
+      await act(async () => {
+        const wrapper = mountWithTheme(
+          <GroupEventDetails
+            api={new MockApiClient()}
+            group={group}
+            event={event}
+            project={proj}
+            organization={org}
+            environments={[{id: '1', name: 'dev', displayName: 'Dev'}]}
+            params={{orgId: org.slug, groupId: group.id, eventId: '1'}}
+            location={{query: {environment: 'dev'}}}
+          />,
+          routerContext
+        );
+        await tick();
+        wrapper.update();
 
-      expect(wrapper.find('EventCause').exists()).toBe(false);
-      expect(wrapper.find('EventCauseEmpty').exists()).toBe(true);
+        expect(wrapper.find('EventCause').exists()).toBe(false);
+        expect(wrapper.find('EventCauseEmpty').exists()).toBe(true);
+      });
     });
 
     it('renders suspect commit', async function () {
@@ -286,24 +295,26 @@ describe('groupEventDetails', () => {
         ],
       });
 
-      const wrapper = mountWithTheme(
-        <GroupEventDetails
-          api={new MockApiClient()}
-          group={group}
-          event={event}
-          project={proj}
-          organization={org}
-          environments={[{id: '1', name: 'dev', displayName: 'Dev'}]}
-          params={{orgId: org.slug, groupId: group.id, eventId: '1'}}
-          location={{query: {environment: 'dev'}}}
-        />,
-        routerContext
-      );
-      await tick();
-      wrapper.update();
+      await act(async () => {
+        const wrapper = mountWithTheme(
+          <GroupEventDetails
+            api={new MockApiClient()}
+            group={group}
+            event={event}
+            project={proj}
+            organization={org}
+            environments={[{id: '1', name: 'dev', displayName: 'Dev'}]}
+            params={{orgId: org.slug, groupId: group.id, eventId: '1'}}
+            location={{query: {environment: 'dev'}}}
+          />,
+          routerContext
+        );
+        await tick();
+        wrapper.update();
 
-      expect(wrapper.find('EventCause').exists()).toBe(true);
-      expect(wrapper.find('EventCauseEmpty').exists()).toBe(false);
+        expect(wrapper.find('EventCause').exists()).toBe(true);
+        expect(wrapper.find('EventCauseEmpty').exists()).toBe(false);
+      });
     });
 
     it('renders suspect commit if `releasesCompletion` empty', async function () {
@@ -312,25 +323,27 @@ describe('groupEventDetails', () => {
         body: [],
       });
 
-      const wrapper = mountWithTheme(
-        <GroupEventDetails
-          api={new MockApiClient()}
-          group={group}
-          event={event}
-          project={proj}
-          organization={org}
-          environments={[{id: '1', name: 'dev', displayName: 'Dev'}]}
-          params={{orgId: org.slug, groupId: group.id, eventId: '1'}}
-          location={{query: {environment: 'dev'}}}
-        />,
-        routerContext
-      );
+      await act(async () => {
+        const wrapper = mountWithTheme(
+          <GroupEventDetails
+            api={new MockApiClient()}
+            group={group}
+            event={event}
+            project={proj}
+            organization={org}
+            environments={[{id: '1', name: 'dev', displayName: 'Dev'}]}
+            params={{orgId: org.slug, groupId: group.id, eventId: '1'}}
+            location={{query: {environment: 'dev'}}}
+          />,
+          routerContext
+        );
 
-      await tick();
-      wrapper.update();
+        await tick();
+        wrapper.update();
 
-      expect(wrapper.find('EventCause').exists()).toBe(true);
-      expect(wrapper.find('EventCauseEmpty').exists()).toBe(false);
+        expect(wrapper.find('EventCause').exists()).toBe(true);
+        expect(wrapper.find('EventCauseEmpty').exists()).toBe(false);
+      });
     });
 
     it('renders suspect commit if `releasesCompletion` null', async function () {
@@ -339,24 +352,26 @@ describe('groupEventDetails', () => {
         body: null,
       });
 
-      const wrapper = mountWithTheme(
-        <GroupEventDetails
-          api={new MockApiClient()}
-          group={group}
-          event={event}
-          project={proj}
-          organization={org}
-          environments={[{id: '1', name: 'dev', displayName: 'Dev'}]}
-          params={{orgId: org.slug, groupId: group.id, eventId: '1'}}
-          location={{query: {environment: 'dev'}}}
-        />,
-        routerContext
-      );
-      await tick();
-      wrapper.update();
+      await act(async () => {
+        const wrapper = mountWithTheme(
+          <GroupEventDetails
+            api={new MockApiClient()}
+            group={group}
+            event={event}
+            project={proj}
+            organization={org}
+            environments={[{id: '1', name: 'dev', displayName: 'Dev'}]}
+            params={{orgId: org.slug, groupId: group.id, eventId: '1'}}
+            location={{query: {environment: 'dev'}}}
+          />,
+          routerContext
+        );
+        await tick();
+        wrapper.update();
 
-      expect(wrapper.find('EventCause').exists()).toBe(true);
-      expect(wrapper.find('EventCauseEmpty').exists()).toBe(false);
+        expect(wrapper.find('EventCause').exists()).toBe(true);
+        expect(wrapper.find('EventCauseEmpty').exists()).toBe(false);
+      });
     });
   });
 
@@ -418,7 +433,9 @@ describe('groupEventDetails', () => {
         body: [unpublishedInstall, internalInstall],
       });
 
-      wrapper = mountWithThemeWrapper();
+      act(() => {
+        wrapper = mountWithThemeWrapper();
+      });
     });
 
     it('loads Integration UI components', () => {
