@@ -676,6 +676,13 @@ function routes() {
         />
       </Route>
 
+      <Route
+        name={t('Git helpers')}
+        path="git-helpers/"
+        componentPromise={() => import('app/views/settings/organizationGitHelpers')}
+        component={errorHandler(LazyLoad)}
+      />
+
       <Route name="Developer Settings" path="developer-settings/">
         <IndexRoute
           componentPromise={() =>
