@@ -124,7 +124,7 @@ describe('groupEventDetails', () => {
     browserHistory.replace.mockClear();
   });
 
-  it.only('redirects on switching to an invalid environment selection for event', async function () {
+  it('redirects on switching to an invalid environment selection for event', async function () {
     await act(async () => {
       const wrapper = mountWithTheme(
         <GroupEventDetails
@@ -143,6 +143,7 @@ describe('groupEventDetails', () => {
       expect(browserHistory.replace).not.toHaveBeenCalled();
       wrapper.setProps({environments: [{id: '1', name: 'prod', displayName: 'Prod'}]});
       await tick();
+
       expect(browserHistory.replace).toHaveBeenCalled();
     });
   });
@@ -157,15 +158,16 @@ describe('groupEventDetails', () => {
           project={project}
           organization={org}
           environments={[{id: '1', name: 'dev', displayName: 'Dev'}]}
-          params={{orgId: org.slug, groupId: group.id, eventId: '1'}}
+          params={{orgId: org.slug, group: group.id, eventId: '1'}}
           location={{}}
         />,
         routerContext
       );
       await tick();
       expect(browserHistory.replace).not.toHaveBeenCalled();
-      wrapper.setProps({environments: [{id: '1', name: 'prod', displayName: 'Prod'}]});
+      wrapper.setProps({environments: []});
       await tick();
+
       expect(browserHistory.replace).not.toHaveBeenCalled();
     });
   });
@@ -196,14 +198,14 @@ describe('groupEventDetails', () => {
           organization={org}
           environments={[{id: '1', name: 'dev', displayName: 'Dev'}]}
           params={{orgId: org.slug, groupId: group.id, eventId: '1'}}
-          location={{}}
+          location={{query: {environment: 'dev'}}}
         />,
         routerContext
       );
       await tick();
-      expect(browserHistory.replace).not.toHaveBeenCalled();
-      wrapper.setProps({environments: [{id: '1', name: 'prod', displayName: 'Prod'}]});
-      await tick();
+
+      wrapper.update();
+
       const buttons = wrapper.find('GroupEventToolbar').find('ButtonBar').find('Button');
 
       expect(buttons.at(0).prop('to')).toEqual({
@@ -262,26 +264,24 @@ describe('groupEventDetails', () => {
         ],
       });
 
-      await act(async () => {
-        const wrapper = mountWithTheme(
-          <GroupEventDetails
-            api={new MockApiClient()}
-            group={group}
-            event={event}
-            project={proj}
-            organization={org}
-            environments={[{id: '1', name: 'dev', displayName: 'Dev'}]}
-            params={{orgId: org.slug, groupId: group.id, eventId: '1'}}
-            location={{query: {environment: 'dev'}}}
-          />,
-          routerContext
-        );
-        await tick();
-        wrapper.update();
+      const wrapper = mountWithTheme(
+        <GroupEventDetails
+          api={new MockApiClient()}
+          group={group}
+          event={event}
+          project={proj}
+          organization={org}
+          environments={[{id: '1', name: 'dev', displayName: 'Dev'}]}
+          params={{orgId: org.slug, groupId: group.id, eventId: '1'}}
+          location={{query: {environment: 'dev'}}}
+        />,
+        routerContext
+      );
+      await tick();
+      wrapper.update();
 
-        expect(wrapper.find('EventCause').exists()).toBe(false);
-        expect(wrapper.find('EventCauseEmpty').exists()).toBe(true);
-      });
+      expect(wrapper.find('EventCause').exists()).toBe(false);
+      expect(wrapper.find('EventCauseEmpty').exists()).toBe(true);
     });
 
     it('renders suspect commit', async function () {
@@ -433,9 +433,7 @@ describe('groupEventDetails', () => {
         body: [unpublishedInstall, internalInstall],
       });
 
-      act(() => {
-        wrapper = mountWithThemeWrapper();
-      });
+      wrapper = mountWithThemeWrapper();
     });
 
     it('loads Integration UI components', () => {
