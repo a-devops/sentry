@@ -26,6 +26,7 @@ export type TimeSeriesData = {
   originalPreviousTimeseriesData?: EventsStatsData | null;
   previousTimeseriesData?: Series | null;
   timeAggregatedData?: Series | {};
+  timeframe?: {start: string; end: string};
 };
 
 type LoadingStatus = {
@@ -158,6 +159,10 @@ type EventsRequestPartialProps = {
    * Hide error toast (used for pages which also query eventsV2)
    */
   hideError?: boolean;
+  /**
+   * Whether or not to zerofill results
+   */
+  withoutZerofill?: boolean;
 };
 
 type TimeAggregationProps =
@@ -396,6 +401,7 @@ class EventsRequest extends React.PureComponent<EventsRequestProps, EventsReques
       // As the server will have replied with a map like:
       // {[titleString: string]: EventsStats}
       const results: MultiSeriesResults = Object.keys(timeseriesData)
+        .filter((seriesName: string) => !['start', 'end'].includes(seriesName))
         .map((seriesName: string): [number, Series] => {
           const seriesData: EventsStats = timeseriesData[seriesName];
           const transformed = this.transformTimeseriesData(
@@ -407,11 +413,17 @@ class EventsRequest extends React.PureComponent<EventsRequestProps, EventsReques
         .sort((a, b) => a[0] - b[0])
         .map(item => item[1]);
 
+      const timeframe =
+        timeseriesData.start && timeseriesData.end
+          ? {start: timeseriesData.start, end: timeseriesData.end}
+          : undefined;
+
       return children({
         loading,
         reloading,
         errored,
         results,
+        timeframe,
         // sometimes we want to reference props that were given to EventsRequest
         ...props,
       });
