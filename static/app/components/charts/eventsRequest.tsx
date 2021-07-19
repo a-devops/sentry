@@ -400,10 +400,15 @@ class EventsRequest extends React.PureComponent<EventsRequestProps, EventsReques
       // Convert the timeseries data into a multi-series result set.
       // As the server will have replied with a map like:
       // {[titleString: string]: EventsStats}
+      let timeframe: {start: string; end: string} | undefined = undefined;
       const results: MultiSeriesResults = Object.keys(timeseriesData)
         .filter((seriesName: string) => !['start', 'end'].includes(seriesName))
         .map((seriesName: string): [number, Series] => {
           const seriesData: EventsStats = timeseriesData[seriesName];
+          // Use the first timeframe we find from the series since all series have the same timeframe anyways
+          if (seriesData.start && seriesData.end && !timeframe) {
+            timeframe = {start: seriesData.start, end: seriesData.end};
+          }
           const transformed = this.transformTimeseriesData(
             seriesData.data,
             seriesName
@@ -412,11 +417,6 @@ class EventsRequest extends React.PureComponent<EventsRequestProps, EventsReques
         })
         .sort((a, b) => a[0] - b[0])
         .map(item => item[1]);
-
-      const timeframe =
-        timeseriesData.start && timeseriesData.end
-          ? {start: timeseriesData.start, end: timeseriesData.end}
-          : undefined;
 
       return children({
         loading,
