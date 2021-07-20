@@ -526,8 +526,11 @@ describe('EventsRequest', function () {
     it('passes query timeframe start and end to the child if supplied by timeseriesData', async function () {
       doEventsRequest.mockImplementation(() =>
         Promise.resolve({
-          start: 1,
-          end: 2,
+          p95: {
+            data: [[new Date(), [COUNT_OBJ]]],
+            start: 1,
+            end: 2,
+          },
         })
       );
       wrapper = mountWithTheme(<EventsRequest {...DEFAULTS}>{mock}</EventsRequest>);
