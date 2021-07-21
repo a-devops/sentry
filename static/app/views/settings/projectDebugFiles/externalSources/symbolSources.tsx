@@ -11,10 +11,12 @@ import {Client} from 'app/api';
 import Feature from 'app/components/acl/feature';
 import FeatureDisabled from 'app/components/acl/featureDisabled';
 import Alert from 'app/components/alert';
+import Button from 'app/components/button';
 import {Item} from 'app/components/dropdownAutoComplete/types';
 import Link from 'app/components/links/link';
 import List from 'app/components/list';
 import ListItem from 'app/components/list/listItem';
+import {Panel, PanelBody, PanelHeader} from 'app/components/panels';
 import AppStoreConnectContext from 'app/components/projects/appStoreConnectContext';
 import {appStoreConnectAlertMessage} from 'app/components/projects/appStoreConnectContext/utils';
 import TextOverflow from 'app/components/textOverflow';
@@ -306,102 +308,112 @@ function SymbolSources({
   }
 
   return (
-    <Fragment>
-      {!!warnings.length && (
-        <Alert type="warning" icon={<IconRefresh />} system>
-          {tn(
-            'Please check the warning related to the following custom repository:',
-            'Please check the warnings related to the following custom repositories:',
-            warnings.length
-          )}
-          <StyledList symbol="bullet">
-            {warnings.map((warning, index) => (
-              <ListItem key={index}>{warning}</ListItem>
-            ))}
-          </StyledList>
-        </Alert>
-      )}
-      {!!errors.length && (
-        <Alert type="error" icon={<IconWarning />} system>
-          {tn(
-            'There was an error connecting to the following custom repository:',
-            'There were errors connecting to the following custom repositories:',
-            errors.length
-          )}
-          <StyledList symbol="bullet">
-            {errors.map((error, index) => (
-              <ListItem key={index}>{error}</ListItem>
-            ))}
-          </StyledList>
-        </Alert>
-      )}
-      <Field
-        label={t('Custom Repositories')}
-        help={
-          <Feature
-            features={['organizations:custom-symbol-sources']}
-            hookName="feature-disabled:custom-symbol-sources"
-            organization={organization}
-            renderDisabled={p => (
-              <FeatureDisabled
-                features={p.features}
-                message={t('Custom repositories are disabled.')}
-                featureName={t('custom repositories')}
-              />
-            )}
-          >
-            {t('Configures custom repositories containing debug files.')}
-          </Feature>
-        }
-        flexibleControlStateSize
-      >
-        <StyledRichListField
-          inline={false}
-          addButtonText={t('Add Repository')}
-          name="symbolSources"
-          value={value}
-          onChange={(updatedItems: Item[]) => {
-            handleSaveModal({updatedItems});
-          }}
-          renderItem={item => (
-            <TextOverflow>{item.name ?? t('<Unnamed Repository>')}</TextOverflow>
-          )}
-          disabled={!organization.features.includes('custom-symbol-sources')}
-          formatMessageValue={false}
-          onEditItem={item => handleEditModal(item.id)}
-          onAddItem={(item, addItem) => {
-            openDebugFileSourceModal({
-              sourceType: item.value,
-              onSave: updatedData => Promise.resolve(addItem(updatedData as Item)),
-            });
-          }}
-          removeConfirm={{
-            onConfirm: item => {
-              if (item.type === 'appStoreConnect') {
-                window.location.reload();
-              }
-            },
-            confirmText: t('Remove Repository'),
-            message: (
-              <Fragment>
-                <TextBlock>
-                  <strong>
-                    {t('Removing this repository applies instantly to new events.')}
-                  </strong>
-                </TextBlock>
-                <TextBlock>
-                  {t(
-                    'Debug files from this repository will not be used to symbolicate future events. This may create new issues and alert members in your organization.'
-                  )}
-                </TextBlock>
-              </Fragment>
-            ),
-          }}
-          addDropdown={{items: dropDownItems}}
-        />
-      </Field>
-    </Fragment>
+    <Panel>
+      <PanelHeader hasButtons>
+        {t('Custom Repositories')}
+        <Button size="small">{t('Add Repository')}</Button>
+      </PanelHeader>
+      <PanelBody>{null}</PanelBody>
+    </Panel>
   );
+
+  // return (
+  //   <Fragment>
+  //     {!!warnings.length && (
+  //       <Alert type="warning" icon={<IconRefresh />} system>
+  //         {tn(
+  //           'Please check the warning related to the following custom repository:',
+  //           'Please check the warnings related to the following custom repositories:',
+  //           warnings.length
+  //         )}
+  //         <StyledList symbol="bullet">
+  //           {warnings.map((warning, index) => (
+  //             <ListItem key={index}>{warning}</ListItem>
+  //           ))}
+  //         </StyledList>
+  //       </Alert>
+  //     )}
+  //     {!!errors.length && (
+  //       <Alert type="error" icon={<IconWarning />} system>
+  //         {tn(
+  //           'There was an error connecting to the following custom repository:',
+  //           'There were errors connecting to the following custom repositories:',
+  //           errors.length
+  //         )}
+  //         <StyledList symbol="bullet">
+  //           {errors.map((error, index) => (
+  //             <ListItem key={index}>{error}</ListItem>
+  //           ))}
+  //         </StyledList>
+  //       </Alert>
+  //     )}
+  //     <Field
+  //       label={t('Custom Repositories')}
+  //       help={
+  //         <Feature
+  //           features={['organizations:custom-symbol-sources']}
+  //           hookName="feature-disabled:custom-symbol-sources"
+  //           organization={organization}
+  //           renderDisabled={p => (
+  //             <FeatureDisabled
+  //               features={p.features}
+  //               message={t('Custom repositories are disabled.')}
+  //               featureName={t('custom repositories')}
+  //             />
+  //           )}
+  //         >
+  //           {t('Configures custom repositories containing debug files.')}
+  //         </Feature>
+  //       }
+  //       flexibleControlStateSize
+  //     >
+  //       <StyledRichListField
+  //         inline={false}
+  //         addButtonText={t('Add Repository')}
+  //         name="symbolSources"
+  //         value={value}
+  //         onChange={(updatedItems: Item[]) => {
+  //           handleSaveModal({updatedItems});
+  //         }}
+  //         renderItem={item => (
+  //           <TextOverflow>{item.name ?? t('<Unnamed Repository>')}</TextOverflow>
+  //         )}
+  //         disabled={!organization.features.includes('custom-symbol-sources')}
+  //         formatMessageValue={false}
+  //         onEditItem={item => handleEditModal(item.id)}
+  //         onAddItem={(item, addItem) => {
+  //           openDebugFileSourceModal({
+  //             sourceType: item.value,
+  //             onSave: updatedData => Promise.resolve(addItem(updatedData as Item)),
+  //           });
+  //         }}
+  //         removeConfirm={{
+  //           onConfirm: item => {
+  //             if (item.type === 'appStoreConnect') {
+  //               window.location.reload();
+  //             }
+  //           },
+  //           confirmText: t('Remove Repository'),
+  //           message: (
+  //             <Fragment>
+  //               <TextBlock>
+  //                 <strong>
+  //                   {t('Removing this repository applies instantly to new events.')}
+  //                 </strong>
+  //               </TextBlock>
+  //               <TextBlock>
+  //                 {t(
+  //                   'Debug files from this repository will not be used to symbolicate future events. This may create new issues and alert members in your organization.'
+  //                 )}
+  //               </TextBlock>
+  //             </Fragment>
+  //           ),
+  //         }}
+  //         addDropdown={{items: dropDownItems}}
+  //       />
+  //     </Field>
+  //   </Fragment>
+  // );
 }
 
 export default SymbolSources;
