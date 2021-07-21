@@ -126,7 +126,7 @@ class SlackIntegrationProvider(IntegrationProvider):
         }
 
         session = http.build_session()
-        resp = session.get('https://slack.com/api/auth.test', params=payload)
+        resp = session.post('https://slack.com/api/auth.test', data=payload)
         resp.raise_for_status()
         resp = resp.json()
 

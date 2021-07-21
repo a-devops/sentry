@@ -235,7 +235,7 @@ class SlackNotifyServiceAction(EventAction):
                 endpoint = "/%s.list" % list_type
 
                 # Slack limits the response of `<list_type>.list` to 1000 channels
-                resp = session.get('https://slack.com/api%s' % endpoint, params=dict(channels_payload, cursor=cursor, limit=100))
+                resp = session.post('https://slack.com/api%s' % endpoint, data=dict(channels_payload, cursor=cursor, limit=100))
                 items = resp.json()
                 if not items.get('ok'):
                     retry_after = resp.headers.get('retry-after')
