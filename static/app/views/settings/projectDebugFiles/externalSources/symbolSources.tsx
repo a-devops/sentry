@@ -8,43 +8,37 @@ import {addErrorMessage, addSuccessMessage} from 'app/actionCreators/indicator';
 import {openDebugFileSourceModal} from 'app/actionCreators/modal';
 import ProjectActions from 'app/actions/projectActions';
 import {Client} from 'app/api';
-import Feature from 'app/components/acl/feature';
-import FeatureDisabled from 'app/components/acl/featureDisabled';
-import Alert from 'app/components/alert';
-import Button from 'app/components/button';
+import DropdownAutoComplete from 'app/components/dropdownAutoComplete';
 import {Item} from 'app/components/dropdownAutoComplete/types';
+import DropdownButton from 'app/components/dropdownButton';
 import Link from 'app/components/links/link';
 import List from 'app/components/list';
 import ListItem from 'app/components/list/listItem';
-import {Panel, PanelBody, PanelHeader} from 'app/components/panels';
+import MenuItem from 'app/components/menuItem';
+import {Panel, PanelBody, PanelHeader, PanelItem} from 'app/components/panels';
 import AppStoreConnectContext from 'app/components/projects/appStoreConnectContext';
 import {appStoreConnectAlertMessage} from 'app/components/projects/appStoreConnectContext/utils';
-import TextOverflow from 'app/components/textOverflow';
 import {DEBUG_SOURCE_TYPES} from 'app/data/debugFileSources';
-import {IconRefresh, IconWarning} from 'app/icons';
 import {t, tct, tn} from 'app/locale';
 import space from 'app/styles/space';
-import {Organization, Project} from 'app/types';
+import {DebugFileSource, Organization, Project} from 'app/types';
 import {defined} from 'app/utils';
-import Field from 'app/views/settings/components/forms/field';
-import RichListField from 'app/views/settings/components/forms/richListField';
-import TextBlock from 'app/views/settings/components/text/textBlock';
 
 import {expandKeys} from './utils';
 
 const dropDownItems = [
   {
-    value: 's3',
+    value: DebugFileSource.S3,
     label: t(DEBUG_SOURCE_TYPES.s3),
     searchKey: t('aws amazon s3 bucket'),
   },
   {
-    value: 'gcs',
+    value: DebugFileSource.GCS,
     label: t(DEBUG_SOURCE_TYPES.gcs),
     searchKey: t('gcs google cloud storage bucket'),
   },
   {
-    value: 'http',
+    value: DebugFileSource.HTTP,
     label: t(DEBUG_SOURCE_TYPES.http),
     searchKey: t('http symbol server ssqp symstore symsrv'),
   },
@@ -79,10 +73,12 @@ function SymbolSources({
   if (
     hasAppConnectStoreFeatureFlag &&
     !appStoreConnectContext &&
-    !dropDownItems.find(dropDownItem => dropDownItem.value === 'appStoreConnect')
+    !dropDownItems.find(
+      dropDownItem => dropDownItem.value === DebugFileSource.APP_STORE_CONNECT
+    )
   ) {
     dropDownItems.push({
-      value: 'appStoreConnect',
+      value: DebugFileSource.APP_STORE_CONNECT,
       label: t(DEBUG_SOURCE_TYPES.appStoreConnect),
       searchKey: t('apple store connect itunes ios'),
     });
@@ -214,7 +210,7 @@ function SymbolSources({
       sourceType: item.type,
       appStoreConnectContext,
       onSave: updatedItem =>
-        handleSaveModal({updatedItem: updatedItem as Item, index: itemIndex}),
+        persistData({updatedItem: updatedItem as Item, index: itemIndex}),
       onClose: handleCloseModal,
     });
   }
@@ -240,7 +236,7 @@ function SymbolSources({
     };
   }
 
-  function handleSaveModal({
+  function persistData({
     updatedItems,
     updatedItem,
     index,
@@ -307,121 +303,63 @@ function SymbolSources({
     });
   }
 
+  function handleAddRepository(repoType: DebugFileSource) {
+    openDebugFileSourceModal({
+      sourceType: repoType,
+      onSave: updatedData =>
+        persistData({updatedItems: [...symbolSources, updatedData] as Item[]}),
+    });
+  }
+
+  console.log('symbolSources', symbolSources);
+
   return (
     <Panel>
       <PanelHeader hasButtons>
         {t('Custom Repositories')}
-        <Button size="small">{t('Add Repository')}</Button>
+        <DropdownAutoComplete
+          items={dropDownItems.map(dropDownItem => ({
+            ...dropDownItem,
+            label: (
+              <StyledMenuItem
+                onClick={event => {
+                  event.preventDefault();
+                  handleAddRepository(dropDownItem.value);
+                }}
+              >
+                {dropDownItem.label}
+              </StyledMenuItem>
+            ),
+          }))}
+        >
+          {({isOpen}) => (
+            <DropdownButton isOpen={isOpen} size="small">
+              {t('Add Repository')}
+            </DropdownButton>
+          )}
+        </DropdownAutoComplete>
       </PanelHeader>
-      <PanelBody>{null}</PanelBody>
+      <PanelBody>
+        {symbolSources.map((symbolSource, index) => (
+          <PanelItem key={index}>{symbolSource.type}</PanelItem>
+        ))}
+      </PanelBody>
     </Panel>
   );
-
-  // return (
-  //   <Fragment>
-  //     {!!warnings.length && (
-  //       <Alert type="warning" icon={<IconRefresh />} system>
-  //         {tn(
-  //           'Please check the warning related to the following custom repository:',
-  //           'Please check the warnings related to the following custom repositories:',
-  //           warnings.length
-  //         )}
-  //         <StyledList symbol="bullet">
-  //           {warnings.map((warning, index) => (
-  //             <ListItem key={index}>{warning}</ListItem>
-  //           ))}
-  //         </StyledList>
-  //       </Alert>
-  //     )}
-  //     {!!errors.length && (
-  //       <Alert type="error" icon={<IconWarning />} system>
-  //         {tn(
-  //           'There was an error connecting to the following custom repository:',
-  //           'There were errors connecting to the following custom repositories:',
-  //           errors.length
-  //         )}
-  //         <StyledList symbol="bullet">
-  //           {errors.map((error, index) => (
-  //             <ListItem key={index}>{error}</ListItem>
-  //           ))}
-  //         </StyledList>
-  //       </Alert>
-  //     )}
-  //     <Field
-  //       label={t('Custom Repositories')}
-  //       help={
-  //         <Feature
-  //           features={['organizations:custom-symbol-sources']}
-  //           hookName="feature-disabled:custom-symbol-sources"
-  //           organization={organization}
-  //           renderDisabled={p => (
-  //             <FeatureDisabled
-  //               features={p.features}
-  //               message={t('Custom repositories are disabled.')}
-  //               featureName={t('custom repositories')}
-  //             />
-  //           )}
-  //         >
-  //           {t('Configures custom repositories containing debug files.')}
-  //         </Feature>
-  //       }
-  //       flexibleControlStateSize
-  //     >
-  //       <StyledRichListField
-  //         inline={false}
-  //         addButtonText={t('Add Repository')}
-  //         name="symbolSources"
-  //         value={value}
-  //         onChange={(updatedItems: Item[]) => {
-  //           handleSaveModal({updatedItems});
-  //         }}
-  //         renderItem={item => (
-  //           <TextOverflow>{item.name ?? t('<Unnamed Repository>')}</TextOverflow>
-  //         )}
-  //         disabled={!organization.features.includes('custom-symbol-sources')}
-  //         formatMessageValue={false}
-  //         onEditItem={item => handleEditModal(item.id)}
-  //         onAddItem={(item, addItem) => {
-  //           openDebugFileSourceModal({
-  //             sourceType: item.value,
-  //             onSave: updatedData => Promise.resolve(addItem(updatedData as Item)),
-  //           });
-  //         }}
-  //         removeConfirm={{
-  //           onConfirm: item => {
-  //             if (item.type === 'appStoreConnect') {
-  //               window.location.reload();
-  //             }
-  //           },
-  //           confirmText: t('Remove Repository'),
-  //           message: (
-  //             <Fragment>
-  //               <TextBlock>
-  //                 <strong>
-  //                   {t('Removing this repository applies instantly to new events.')}
-  //                 </strong>
-  //               </TextBlock>
-  //               <TextBlock>
-  //                 {t(
-  //                   'Debug files from this repository will not be used to symbolicate future events. This may create new issues and alert members in your organization.'
-  //                 )}
-  //               </TextBlock>
-  //             </Fragment>
-  //           ),
-  //         }}
-  //         addDropdown={{items: dropDownItems}}
-  //       />
-  //     </Field>
-  //   </Fragment>
-  // );
 }
 
 export default SymbolSources;
 
-const StyledRichListField = styled(RichListField)`
-  padding: 0;
-`;
-
 const StyledList = styled(List)`
   margin-top: ${space(1)};
+`;
+
+const StyledMenuItem = styled(MenuItem)`
+  color: ${p => p.theme.textColor};
+  font-size: ${p => p.theme.fontSizeMedium};
+  font-weight: 400;
+  text-transform: none;
+  span {
+    padding: 0;
+  }
 `;

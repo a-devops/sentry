@@ -2089,7 +2089,13 @@ export type ServerlessFunction = {
 /**
  * File storage service options for debug files
  */
-export type DebugFileSource = 'http' | 's3' | 'gcs' | 'appStoreConnect';
+
+export enum DebugFileSource {
+  HTTP = 'http',
+  S3 = 's3',
+  GCS = 'gcs',
+  APP_STORE_CONNECT = 'appStoreConnect',
+}
 
 /**
  * Base type for series   style API response

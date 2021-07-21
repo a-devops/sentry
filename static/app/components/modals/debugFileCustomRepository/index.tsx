@@ -57,7 +57,7 @@ function DebugFileCustomRepository({
       closeModal();
 
       if (
-        sourceType === 'appStoreConnect' &&
+        sourceType === DebugFileSource.APP_STORE_CONNECT &&
         appStoreConnectContext?.updateAlertMessage
       ) {
         window.location.reload();
@@ -65,7 +65,7 @@ function DebugFileCustomRepository({
     });
   }
 
-  if (sourceType === 'appStoreConnect') {
+  if (sourceType === DebugFileSource.APP_STORE_CONNECT) {
     return (
       <AppStoreConnect
         Header={Header}
