@@ -54,11 +54,12 @@ def inner_dsym_download(project_id: int, config_id: str) -> None:
             if not build_state.fetched:
                 builds.append((build, build_state))
 
-    build_refresh_dates = project.get_option(
+    serialized_option = project.get_option(
         appconnect.APPSTORECONNECT_BUILD_REFRESHES_OPTION, default={}
     )
-    build_refresh_dates[config_id] = json.dumps(datetime.now())
-    serialized_refresh_dates = json.dumps(build_refresh_dates)
+    build_refresh_dates = json.loads(serialized_option)
+    build_refresh_dates[config_id] = datetime.now()
+    serialized_refresh_dates = json.dumps_htmlsafe(build_refresh_dates)
     project.update_option(
         appconnect.APPSTORECONNECT_BUILD_REFRESHES_OPTION, serialized_refresh_dates
     )
