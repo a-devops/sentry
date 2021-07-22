@@ -114,7 +114,7 @@ class SlackIntegrationProvider(IntegrationProvider):
         }
 
         session = http.build_session()
-        resp = session.get('https://slack.com/api/team.info', params=payload)
+        resp = session.post('https://slack.com/api/team.info', data=payload)
         resp.raise_for_status()
         resp = resp.json()
 
